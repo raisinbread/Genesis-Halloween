@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   applicationComplete="init()"
+					   width="200"
+					   height="300">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.images.PNGEncoder;
+			
+			import flash.filters.BitmapFilter;
+			import flash.filters.ColorMatrixFilter;
+			import flash.media.Camera;
+			import flash.media.Video;
+			
+			import mx.core.UIComponent;
+			
+			private var camera:Camera;
+			private var video:Video;
+			private var savePath:File;
+			private var imageBytes:ByteArray;
+			
+			private var cWidth:uint = 200;
+			private var cHeight:uint = 200;
+			
+			public function init():void {
+				camera = Camera.getCamera();
+				
+				if(camera != null) {
+					camera.setMode(cWidth, cHeight, 15);
+					video = new Video(camera.width, camera.height);
+					video.attachCamera(camera);
+					var foo:UIComponent = new UIComponent();
+					foo.x = 5;
+					foo.y = 5;
+					foo.addChild(video);
+					addElement(foo);
+				}
+			}
+			
+			public function capture():void {
+				var snapshot:BitmapData = new BitmapData(cWidth, cHeight);
+				snapshot.draw(video, new Matrix());
+				snapshot.applyFilter(snapshot, snapshot.rect, new Point(0,0), convertToGrayscale());
+				
+				imageBytes = PNGEncoder.encode(snapshot);
+				
+				savePath = File.desktopDirectory;
+				savePath.browseForSave("Save As");
+				savePath.addEventListener(Event.SELECT, saveData);
+			}
+			
+			public function convertToGrayscale():BitmapFilter {
+				var r:Number = 0.212671;
+				var g:Number = 0.715160;
+				var b:Number = 0.072169;
+				return new ColorMatrixFilter([
+					r,g,b,0,0,
+					r,g,b,0,0,
+					r,g,b,0,0,
+					0,0,0,1,0
+				]);
+			}
+			
+			public function saveData(event:Event):void {
+				var newFile:File = event.target as File;
+				if(!newFile.exists) {
+					var stream:FileStream = new FileStream();
+					stream.open(newFile, FileMode.WRITE);
+					stream.writeBytes(imageBytes);
+					stream.close();
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:Button x="70" y="229" label="Capture" click="capture()"/>
+</s:WindowedApplication>
