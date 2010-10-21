@@ -221,7 +221,7 @@ package jp.maaash.ObjectDetection
 
 		private function logger(... args):void{
 			if(!debug){ return; }
-			log(["[ObjectDetector]"+args.shift()].concat(args));
+			//log(["[ObjectDetector]"+args.shift()].concat(args));
 		}
 	}
 }

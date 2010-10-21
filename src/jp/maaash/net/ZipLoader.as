@@ -40,7 +40,7 @@ package jp.maaash.net {
 
 		private function logger(... args):void{
 			if(!debug){ return; }
-			log(["[ZipLoader]"+args.shift()].concat(args));
+			//log(["[ZipLoader]"+args.shift()].concat(args));
 		}
 	}
 }

@@ -115,7 +115,7 @@ package jp.maaash.ObjectDetection
 
 		private function logger(... args):void{
 			if(!debug){ return; }
-			log(["[TargetImage]"+args.shift()].concat(args));
+			/*log(["[TargetImage]"+args.shift()].concat(args));*/
 		}
 	}
 }

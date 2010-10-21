@@ -8,50 +8,125 @@
 	<fx:Script>
 		<![CDATA[
 			import com.adobe.images.PNGEncoder;
-			
 			import flash.filters.BitmapFilter;
 			import flash.filters.ColorMatrixFilter;
 			import flash.media.Camera;
 			import flash.media.Video;
-			
+			import jp.maaash.ObjectDetection.ObjectDetector;
+			import jp.maaash.ObjectDetection.ObjectDetectorEvent;
+			import jp.maaash.ObjectDetection.ObjectDetectorOptions;
 			import mx.core.UIComponent;
 			
-			private var camera:Camera;
-			private var video:Video;
-			private var savePath:File;
-			private var imageBytes:ByteArray;
+			private var _camera:Camera;
+			private var _video:Video;
+			private var _videoContainer:UIComponent;
+			private var _savePath:File;
+			private var _imageBytes:ByteArray;
+			private var _cWidth:uint = 200;
+			private var _cHeight:uint = 200;
+			private const _FACE_DETECT_INTERVAL:uint = 50;
+			private var _detectionTimer:Timer;
+			private var _detector:ObjectDetector;
+			private var _markers:Array;
 			
-			private var cWidth:uint = 200;
-			private var cHeight:uint = 200;
-			
-			public function init():void {
-				camera = Camera.getCamera();
+			private function init():void {	
+				_detectionTimer = new Timer(_FACE_DETECT_INTERVAL);
+				_detectionTimer.addEventListener(TimerEvent.TIMER, handleDetectionTimer);
+				_detectionTimer.start();
 				
-				if(camera != null) {
-					camera.setMode(cWidth, cHeight, 15);
-					video = new Video(camera.width, camera.height);
-					video.attachCamera(camera);
-					var foo:UIComponent = new UIComponent();
-					foo.x = 5;
-					foo.y = 5;
-					foo.addChild(video);
-					addElement(foo);
+				initCamera();
+				initDetector();
+				startDetection();
+			}
+			
+			private function handleDetectionTimer(event:TimerEvent):void {
+				var bitmapSnapshot:Bitmap = new Bitmap(new BitmapData(_cWidth, _cHeight, false));
+				bitmapSnapshot.bitmapData.draw(_video);
+				_detector.detect(bitmapSnapshot);
+			}
+			
+			private function handleDetectionComplete(event:ObjectDetectorEvent):void {
+				if(event.rects.length < 1) {
+					//Clear all markers
+					for each(var marker:UIComponent in _markers) {
+						marker.visible = false;
+					}
+					return;
+				}
+				//Move all markers to correct position(s)
+				for(var i:uint = 0; i < event.rects.length; i++) {
+					if(_markers[i] == null) {
+						_markers[i] = createMarker();
+						addElement(_markers[i]);
+					}	
+					_markers[i].visible = true;
+					_markers[i].x = event.rects[i].x;
+					_markers[i].y = event.rects[i].y;
+					_markers[i].width = event.rects[i].width;
+					_markers[i].height = event.rects[i].height;
+				}
+				//Clear extra markers
+				if(_markers.length > event.rects.length) {
+					for(var j:uint = event.rects.length; j < _markers.length; j++) {
+						_markers[j].visible = false;
+					}
 				}
 			}
 			
-			public function capture():void {
-				var snapshot:BitmapData = new BitmapData(cWidth, cHeight);
-				snapshot.draw(video, new Matrix());
-				snapshot.applyFilter(snapshot, snapshot.rect, new Point(0,0), convertToGrayscale());
-				
-				imageBytes = PNGEncoder.encode(snapshot);
-				
-				savePath = File.desktopDirectory;
-				savePath.browseForSave("Save As");
-				savePath.addEventListener(Event.SELECT, saveData);
+			private function createMarker():UIComponent {
+				var markerContainer:UIComponent = new UIComponent();
+				markerContainer.graphics.beginFill(0xff0000, 0.4);
+				markerContainer.graphics.drawRect(0, 0, 100, 100);
+				return markerContainer;
 			}
 			
-			public function convertToGrayscale():BitmapFilter {
+			private function startDetection():void {
+				_markers = new Array();
+				_detector.addEventListener(ObjectDetectorEvent.DETECTION_COMPLETE, handleDetectionComplete);
+			}
+			
+			private function initCamera():void {
+				_camera = Camera.getCamera();
+				
+				if(_camera != null) {
+					_camera.setMode(_cWidth, _cHeight, 15);
+					_video = new Video(_camera.width, _camera.height);
+					_video.attachCamera(_camera);
+					_videoContainer = new UIComponent();
+					_videoContainer.x = 5;
+					_videoContainer.y = 5;
+					_videoContainer.addChild(_video);
+					addElement(_videoContainer);
+				}
+			}
+			
+			private function initDetector():void {
+				_detector = new ObjectDetector();
+				
+				var options:ObjectDetectorOptions = new ObjectDetectorOptions();
+				options.min_size = 50;
+				options.startx = ObjectDetectorOptions.INVALID_POS;
+				options.starty = ObjectDetectorOptions.INVALID_POS;
+				options.endx = ObjectDetectorOptions.INVALID_POS;
+				options.endy = ObjectDetectorOptions.INVALID_POS;
+				
+				_detector.options = options;
+				_detector.loadHaarCascades("face.zip");
+			}
+			
+			private function capture():void {
+				var snapshot:BitmapData = new BitmapData(_cWidth, _cHeight);
+				snapshot.draw(_video, new Matrix());
+				snapshot.applyFilter(snapshot, snapshot.rect, new Point(0,0), convertToGrayscale());
+				
+				_imageBytes = PNGEncoder.encode(snapshot);
+				
+				_savePath = File.desktopDirectory;
+				_savePath.browseForSave("Save As");
+				_savePath.addEventListener(Event.SELECT, saveData);
+			}
+			
+			private function convertToGrayscale():BitmapFilter {
 				var r:Number = 0.212671;
 				var g:Number = 0.715160;
 				var b:Number = 0.072169;
@@ -63,12 +138,12 @@
 				]);
 			}
 			
-			public function saveData(event:Event):void {
+			private function saveData(event:Event):void {
 				var newFile:File = event.target as File;
 				if(!newFile.exists) {
 					var stream:FileStream = new FileStream();
 					stream.open(newFile, FileMode.WRITE);
-					stream.writeBytes(imageBytes);
+					stream.writeBytes(_imageBytes);
 					stream.close();
 				}
 			}

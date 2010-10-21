@@ -109,7 +109,7 @@ package jp.maaash.ObjectDetection
 
 		private function logger(... args):void{
 			if(!debug){ return; }
-			log(["[HaarCascadeLoader]"+args.shift()].concat(args));
+			//log(["[HaarCascadeLoader]"+args.shift()].concat(args));
 		}
 	}
 }
