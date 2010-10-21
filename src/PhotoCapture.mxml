@@ -31,7 +31,7 @@
 			
 			private function init():void {	
 				_detectionTimer = new Timer(_FACE_DETECT_INTERVAL);
-				_detectionTimer.addEventListener(TimerEvent.TIMER, handleDetectionTimer);
+				_detectionTimer.addEventListener(TimerEvent.TIMER, handleDetectionTimer, false, 0, true);
 				_detectionTimer.start();
 				
 				initCamera();
@@ -82,7 +82,7 @@
 			
 			private function startDetection():void {
 				_markers = new Array();
-				_detector.addEventListener(ObjectDetectorEvent.DETECTION_COMPLETE, handleDetectionComplete);
+				_detector.addEventListener(ObjectDetectorEvent.DETECTION_COMPLETE, handleDetectionComplete, false, 0, true);
 			}
 			
 			private function initCamera():void {
@@ -123,7 +123,7 @@
 				
 				_savePath = File.desktopDirectory;
 				_savePath.browseForSave("Save As");
-				_savePath.addEventListener(Event.SELECT, saveData);
+				_savePath.addEventListener(Event.SELECT, saveData, false, 0, true);
 			}
 			
 			private function convertToGrayscale():BitmapFilter {
