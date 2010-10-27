@@ -8,13 +8,16 @@
 	<fx:Script>
 		<![CDATA[
 			import com.adobe.images.PNGEncoder;
+			
 			import flash.filters.BitmapFilter;
 			import flash.filters.ColorMatrixFilter;
 			import flash.media.Camera;
 			import flash.media.Video;
+			
 			import jp.maaash.ObjectDetection.ObjectDetector;
 			import jp.maaash.ObjectDetection.ObjectDetectorEvent;
 			import jp.maaash.ObjectDetection.ObjectDetectorOptions;
+			
 			import mx.core.UIComponent;
 			
 			private var _camera:Camera;
@@ -59,11 +62,12 @@
 						_markers[i] = createMarker();
 						addElement(_markers[i]);
 					}	
-					_markers[i].visible = true;
 					_markers[i].x = event.rects[i].x;
 					_markers[i].y = event.rects[i].y;
 					_markers[i].width = event.rects[i].width;
 					_markers[i].height = event.rects[i].height;
+					_markers[i].currentRect = event.rects[i];
+					_markers[i].visible = true;
 				}
 				//Clear extra markers
 				if(_markers.length > event.rects.length) {
@@ -74,10 +78,9 @@
 			}
 			
 			private function createMarker():UIComponent {
-				var markerContainer:UIComponent = new UIComponent();
-				markerContainer.graphics.beginFill(0xff0000, 0.4);
-				markerContainer.graphics.drawRect(0, 0, 100, 100);
-				return markerContainer;
+				var faceMarker:FaceMarker = new FaceMarker();
+				faceMarker.addEventListener(Event.ACTIVATE, capture, false, 0, true);
+				return faceMarker;
 			}
 			
 			private function startDetection():void {
@@ -104,7 +107,7 @@
 				_detector = new ObjectDetector();
 				
 				var options:ObjectDetectorOptions = new ObjectDetectorOptions();
-				options.min_size = 50;
+				options.min_size = 45;
 				options.startx = ObjectDetectorOptions.INVALID_POS;
 				options.starty = ObjectDetectorOptions.INVALID_POS;
 				options.endx = ObjectDetectorOptions.INVALID_POS;
@@ -114,9 +117,13 @@
 				_detector.loadHaarCascades("face.zip");
 			}
 			
-			private function capture():void {
-				var snapshot:BitmapData = new BitmapData(_cWidth, _cHeight);
-				snapshot.draw(_video, new Matrix());
+			private function capture(event:Event):void {
+				var faceMarker:FaceMarker = event.target as FaceMarker;
+				var snapshot:BitmapData = new BitmapData(faceMarker.currentRect.width, faceMarker.currentRect.height);
+				snapshot.draw(
+					_video, 
+					new Matrix(1, 0, 0, 1, -faceMarker.currentRect.x, -faceMarker.currentRect.y)
+				);
 				snapshot.applyFilter(snapshot, snapshot.rect, new Point(0,0), convertToGrayscale());
 				
 				_imageBytes = PNGEncoder.encode(snapshot);
@@ -149,5 +156,5 @@
 			}
 		]]>
 	</fx:Script>
-	<s:Button x="70" y="229" label="Capture" click="capture()"/>
+	<!-- <s:Button x="70" y="229" label="Capture" click="capture()"/> -->
 </s:WindowedApplication>
