@@ -9,7 +9,7 @@ package
 	{
 		public var currentRect:Rectangle;
 		private var lastDeparture:Date;
-		private var newFaceBuffer:Number = 1000;
+		private var newFaceBuffer:Number = 2000;
 		
 		public function FaceMarker()
 		{
