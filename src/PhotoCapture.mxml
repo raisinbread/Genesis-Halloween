@@ -33,6 +33,10 @@
 			private var _markers:Array;
 			
 			private function init():void {	
+				initSaveDirectory();
+			}
+			
+			private function finishInit():void {
 				_detectionTimer = new Timer(_FACE_DETECT_INTERVAL);
 				_detectionTimer.addEventListener(TimerEvent.TIMER, handleDetectionTimer, false, 0, true);
 				_detectionTimer.start();
@@ -128,9 +132,18 @@
 				
 				_imageBytes = PNGEncoder.encode(snapshot);
 				
-				_savePath = File.desktopDirectory;
-				_savePath.browseForSave("Save As");
-				_savePath.addEventListener(Event.SELECT, saveData, false, 0, true);
+				saveData();
+			}
+			
+			private function initSaveDirectory():void {
+				_savePath = new File();
+				_savePath.addEventListener(Event.SELECT, handleSaveDirectory, false, 0, true);
+				_savePath.browseForDirectory("Please select a folder to store faces in.");
+			}
+			
+			private function handleSaveDirectory(event:Event):void {
+				_savePath =event.target as File;
+				this.finishInit();
 			}
 			
 			private function convertToGrayscale():BitmapFilter {
@@ -145,8 +158,9 @@
 				]);
 			}
 			
-			private function saveData(event:Event):void {
-				var newFile:File = event.target as File;
+			private function saveData():void {
+				var now:Date = new Date();
+				var newFile:File = _savePath.resolvePath(now.getTime() + ".png");
 				if(!newFile.exists) {
 					var stream:FileStream = new FileStream();
 					stream.open(newFile, FileMode.WRITE);

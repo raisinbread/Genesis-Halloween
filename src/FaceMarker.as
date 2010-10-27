@@ -17,6 +17,7 @@ package
 			this.alpha = 0.4;
 			this.visible = false;
 			this.lastDeparture = new Date();
+			this.lastDeparture.setTime(0);
 		}
 		
 		override public function set visible(value:Boolean):void
