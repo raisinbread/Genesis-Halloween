@@ -124,7 +124,7 @@
 			private function capture(event:Event):void {
 				var faceMarker:FaceMarker = event.target as FaceMarker;
 				
-				//Add 50% to top and bottom, 25% to each side.
+				//Add 50% to top and bottom, 25% to each side
 				var horizontalBuffer:uint = (faceMarker.currentRect.width * 0.25);
 				var verticalBuffer:uint = (faceMarker.currentRect.width * 0.5);
 				
