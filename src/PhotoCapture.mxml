@@ -123,10 +123,18 @@
 			
 			private function capture(event:Event):void {
 				var faceMarker:FaceMarker = event.target as FaceMarker;
-				var snapshot:BitmapData = new BitmapData(faceMarker.currentRect.width, faceMarker.currentRect.height);
+				
+				//Add 50% to top and bottom, 25% to each side.
+				var horizontalBuffer:uint = (faceMarker.currentRect.width * 0.25);
+				var verticalBuffer:uint = (faceMarker.currentRect.width * 0.5);
+				
+				var snapshot:BitmapData = new BitmapData(
+					faceMarker.currentRect.width + (horizontalBuffer * 2), 
+					faceMarker.currentRect.height + (verticalBuffer * 2)
+				);
 				snapshot.draw(
 					_video, 
-					new Matrix(1, 0, 0, 1, -faceMarker.currentRect.x, -faceMarker.currentRect.y)
+					new Matrix(1, 0, 0, 1, -faceMarker.currentRect.x + horizontalBuffer, -faceMarker.currentRect.y + verticalBuffer)
 				);
 				snapshot.applyFilter(snapshot, snapshot.rect, new Point(0,0), convertToGrayscale());
 				
