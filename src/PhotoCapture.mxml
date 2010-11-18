@@ -93,6 +93,7 @@
 			}
 			
 			private function initCamera():void {
+				var names:Array = Camera.names;
 				_camera = Camera.getCamera();
 				
 				if(_camera != null) {

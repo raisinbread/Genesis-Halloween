@@ -11,8 +11,8 @@ package
 		private var lastDeparture:Date;
 		private var lastArrival:Date;
 		private var waitingForNext:Boolean;
-		private var newFaceBuffer:Number = 2000;
-		private var minLifeTime:Number = 1500;
+		private var newFaceBuffer:Number = 1000;
+		private var minLifeTime:Number = 800;
 		
 		public function FaceMarker()
 		{
